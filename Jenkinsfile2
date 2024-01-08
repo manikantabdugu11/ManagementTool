@@ -1,0 +1,34 @@
+node {
+  def app
+  stage('SCM') {
+    checkout scm
+  }
+  stage('Build Jar') {
+    def mvn = tool 'maven';
+    sh "${mvn}/bin/mvn clean install"
+  }
+  stage('SonarQube Analysis') {
+    def mvn = tool 'maven';
+    withSonarQubeEnv() {
+      sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=firms -Dsonar.projectName='firms' -Dsonar.token=sqp_407ec1c224e0f3ab10174b638fbb49e7ac25f313"
+    }
+  }
+
+  stage('OWASP Vulnerability SCAN') {
+      dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+      dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+  }
+
+  stage('Build Docker Image') {
+    sh 'docker build -t firm -f Dockerfile1.txt .'
+  }
+
+  stage('Start Docker container') {
+    sh 'docker ps -f name=firms -q | xargs --no-run-if-empty docker container stop'
+    sh 'docker container ls -a -fname=firms -q | xargs -r docker container rm'
+    sh 'docker run -d --name firm -p 8081:8081 firm:latest'
+  }
+
+  stage('Scan security vulnerabilities') {
+  }
+}
