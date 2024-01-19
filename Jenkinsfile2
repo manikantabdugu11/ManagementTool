@@ -24,9 +24,7 @@ node {
   }
 
   stage('Start Docker container') {
-    sh 'docker ps -f name=firms -q | xargs --no-run-if-empty docker container stop'
-    sh 'docker container ls -a -fname=firms -q | xargs -r docker container rm'
-    sh 'docker run -d --name firm -p 8081:8081 firm:latest'
+    
   }
 
   stage('Scan security vulnerabilities') {
