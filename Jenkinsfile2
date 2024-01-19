@@ -20,7 +20,7 @@ node {
   }
 
   stage('Build Docker Image') {
-    sh 'docker build -t firm -f Dockerfile1.txt .'
+    
   }
 
   stage('Start Docker container') {
